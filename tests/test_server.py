@@ -11,6 +11,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 @pytest.fixture(autouse=True)
 def notes_dir(monkeypatch):
     monkeypatch.setattr(server, "NOTES_DIR", FIXTURES)
+    monkeypatch.setattr(server, "NOTION", None)
 
 
 @pytest.mark.anyio

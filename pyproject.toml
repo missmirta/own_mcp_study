@@ -5,6 +5,7 @@ description = "Власний MCP-сервер для конспекту з Noti
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
     "mcp[cli]>=2.3.0",
 ]
 

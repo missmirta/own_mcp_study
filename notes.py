@@ -16,10 +16,7 @@ NOTION_ID = re.compile(r" [0-9a-f]{32}$")
 class Note:
     id: str
     title: str
-    path: Path
-
-    def read(self) -> str:
-        return self.path.read_text(encoding="utf-8")
+    text: str
 
 
 def _clean(name: str) -> str:
@@ -39,7 +36,8 @@ def load_notes(notes_dir: Path) -> dict[str, Note]:
     for path in notes_dir.rglob("*.md"):
         rel = path.relative_to(notes_dir).with_suffix("")
         note_id = "/".join(_clean(part) for part in rel.parts)
-        notes[note_id] = Note(note_id, _title(path.read_text(encoding="utf-8"), rel.name), path)
+        text = path.read_text(encoding="utf-8")
+        notes[note_id] = Note(note_id, _title(text, rel.name), text)
     return dict(sorted(notes.items()))
 
 
@@ -55,7 +53,7 @@ def search(notes: dict[str, Note], query: str, limit: int) -> list[Match]:
     needle = query.casefold()
     matches: list[Match] = []
     for note in notes.values():
-        for number, line in enumerate(note.read().splitlines(), start=1):
+        for number, line in enumerate(note.text.splitlines(), start=1):
             if needle in line.casefold():
                 matches.append(Match(note.id, number, line.strip()))
                 if len(matches) >= limit:

@@ -1,0 +1,63 @@
+"""Читання конспекту з Markdown-експорту Notion.
+
+Notion додає до кожного імені файлу й папки 32-символьний id
+(«Machine Learning 3b2736c1ab2c8060b525fd7bc7052f74.md»). Ми його відкидаємо,
+тож id нотатки виглядає як шлях з людськими назвами: «Machine Learning/PyTorch».
+"""
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+NOTION_ID = re.compile(r" [0-9a-f]{32}$")
+
+
+@dataclass
+class Note:
+    id: str
+    title: str
+    path: Path
+
+    def read(self) -> str:
+        return self.path.read_text(encoding="utf-8")
+
+
+def _clean(name: str) -> str:
+    return NOTION_ID.sub("", name)
+
+
+def _title(text: str, fallback: str) -> str:
+    for line in text.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return fallback
+
+
+def load_notes(notes_dir: Path) -> dict[str, Note]:
+    """Знаходить усі .md у папці (разом з вкладеними) і повертає їх за id."""
+    notes: dict[str, Note] = {}
+    for path in notes_dir.rglob("*.md"):
+        rel = path.relative_to(notes_dir).with_suffix("")
+        note_id = "/".join(_clean(part) for part in rel.parts)
+        notes[note_id] = Note(note_id, _title(path.read_text(encoding="utf-8"), rel.name), path)
+    return dict(sorted(notes.items()))
+
+
+@dataclass
+class Match:
+    note_id: str
+    line: int
+    text: str
+
+
+def search(notes: dict[str, Note], query: str, limit: int) -> list[Match]:
+    """Пошук без урахування регістру; повертає рядки, де трапився запит."""
+    needle = query.casefold()
+    matches: list[Match] = []
+    for note in notes.values():
+        for number, line in enumerate(note.read().splitlines(), start=1):
+            if needle in line.casefold():
+                matches.append(Match(note.id, number, line.strip()))
+                if len(matches) >= limit:
+                    return matches
+    return matches

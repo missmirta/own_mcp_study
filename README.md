@@ -1,54 +1,56 @@
 # own_mcp_study
 
-Власний MCP-сервер для конспекту з Notion. Пишемо його крок за кроком, щоб вивчити Model Context Protocol.
+A custom MCP server for personal Notion notes. Built step by step to learn the Model Context Protocol.
 
-## План
+The notes it serves: [Machine Learning on Notion](https://app.notion.com/p/Machine-Learning-3b2736c1ab2c8060b525fd7bc7052f74).
 
-1. **Скелет сервера** з одним інструментом `ping`, перевірка в MCP Inspector і Claude Desktop. ✅
-2. **Конспект як дані**: Markdown-експорт з Notion та інструменти `list_notes`, `read_note`, `search_notes`. ✅
-3. **Решта протоколу**: resource для кожної нотатки та prompt «зроби квіз за темою». ✅
-4. **Живий Notion**: читання через Notion API замість експорту. ← зараз тут
+## Plan
 
-## Запуск
+1. **Server skeleton** with a single `ping` tool, checked in MCP Inspector and Claude Desktop. ✅
+2. **Notes as data**: a Markdown export from Notion and the tools `list_notes`, `read_note`, `search_notes`. ✅
+3. **The rest of the protocol**: a resource for every note and a "make a quiz on a topic" prompt. ✅
+4. **Live Notion**: reading through the Notion API instead of an export. ← currently here
 
-Потрібен [uv](https://docs.astral.sh/uv/getting-started/installation/).
+## Running
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
 git clone https://github.com/missmirta/own_mcp_study
 cd own_mcp_study
 uv sync
-uv run pytest        # тести
+uv run pytest        # tests
 ```
 
-### Конспект
+### Notes
 
-Сервер читає Markdown-експорт з Notion:
+The server reads a Markdown export from Notion:
 
-1. У Notion відкрий сторінку конспекту → **⋯ → Export**.
-2. Формат **Markdown & CSV**, увімкни **Include subpages** (інакше потрапить лише верхня сторінка без підсторінок).
-3. Розпакуй zip у папку `notes/` у репозиторії (вона в .gitignore, тож конспект не потрапить у git) або в будь-яку іншу і вкажи її в `NOTES_DIR`.
+1. In Notion, open the notes page → **⋯ → Export**.
+2. Choose the **Markdown & CSV** format and enable **Include subpages** (otherwise only the top page is exported, without subpages).
+3. Unzip into a `notes/` folder in the repository (it is in .gitignore, so your notes won't end up in git) or into any other folder and point `NOTES_DIR` at it.
 
-Інструменти:
+Tools:
 
-- `list_notes` — список нотаток з id. Notion-ові хеші з назв прибрано, тож id виглядають як `Machine Learning/PyTorch`.
-- `read_note(note_id)` — повний текст нотатки.
-- `search_notes(query, limit=20)` — рядки зі збігом, без урахування регістру.
+- `list_notes` — list of notes with ids. Notion hashes are stripped from the names, so ids look like `Machine Learning/PyTorch`.
+- `read_note(note_id)` — full text of a note.
+- `search_notes(query, limit=20)` — matching lines, case-insensitive.
 
-Ресурси та prompt:
+Resources and prompt:
 
-- Кожна нотатка є ресурсом `note:///<id>`. У Claude Desktop їх видно в меню **+ → notes**, і нотатку можна прикріпити до розмови цілком.
-- Prompt `quiz(topic, questions=5)` знаходить нотатки, де згадується тема, і просить Claude провести квіз з питаннями по одному. У Claude Desktop він теж у меню **+ → notes**.
+- Every note is a resource `note:///<id>`. In Claude Desktop they appear in the **+ → notes** menu, and a note can be attached to a conversation in full.
+- The prompt `quiz(topic, questions=5)` finds the notes that mention the topic and asks Claude to run a quiz, one question at a time. In Claude Desktop it is also in the **+ → notes** menu.
 
-Три частини MCP і хто їх викликає: **tools** вирішує викликати модель, **resources** прикріплює користувач чи застосунок, **prompts** обирає користувач як готовий сценарій.
+The three MCP parts and who triggers them: the model decides to call **tools**, the user or the app attaches **resources**, and the user picks **prompts** as ready-made scenarios.
 
-### Живий Notion (без експорту)
+### Live Notion (no export)
 
-Сервер може читати конспект напряму з Notion, тоді нічого експортувати не треба:
+The server can read the notes straight from Notion, so there is nothing to export:
 
-1. Відкрий [notion.so/my-integrations](https://www.notion.so/my-integrations) → **New integration**, тип Internal, дозволи **Read content**. Скопіюй токен (`ntn_…` або `secret_…`).
-2. Відкрий кореневу сторінку конспекту → **⋯ → Connections** → додай свою інтеграцію. Підсторінки успадкують доступ.
-3. Скопіюй посилання на цю сторінку (**Share → Copy link**).
-4. Додай у `env` конфігу Claude Desktop:
+1. Open [notion.so/my-integrations](https://www.notion.so/my-integrations) → **New integration**, type Internal, capability **Read content**. Copy the token (`ntn_…` or `secret_…`).
+2. Open the root page of your notes → **⋯ → Connections** → add your integration. Subpages inherit access.
+3. Copy the link to that page (**Share → Copy link**).
+4. Add to `env` in the Claude Desktop config:
 
 ```json
 "env": {
@@ -57,38 +59,38 @@ uv run pytest        # тести
 }
 ```
 
-Коли обидві змінні задані, `NOTES_DIR` ігнорується. Сервер обходить кореневу сторінку та всі підсторінки (і `child_page`, і посилання на сторінки), перетворює блоки на Markdown і кешує результат на хвилину, бо Notion API повільний і обмежує частоту запитів. Токен нікуди не потрапляє, крім заголовка запитів до api.notion.com. Зображення й вбудовані бази даних поки пропускаються.
+When both variables are set, `NOTES_DIR` is ignored. The server walks the root page and all subpages (both `child_page` and page links), converts the blocks to Markdown and caches the result for a minute, because the Notion API is slow and rate-limited. The token goes nowhere except the headers of requests to api.notion.com. Images and embedded databases are skipped for now.
 
-Щоб оновити конспект, просто заміни файли в папці: сервер перечитує її на кожен виклик.
+To update an exported folder, just replace the files: the server re-reads it on every call.
 
-### Перевірка в MCP Inspector
+### Checking in MCP Inspector
 
-Inspector показує, які інструменти бачить клієнт, і дає викликати їх вручну (потрібен Node.js):
+Inspector shows which tools a client sees and lets you call them by hand (requires Node.js):
 
 ```bash
 npx @modelcontextprotocol/inspector uv run server.py
 ```
 
-У вікні, що відкриється, натисни **Connect**, потім **Tools → List Tools → ping → Run Tool**.
+In the window that opens, click **Connect**, then **Tools → List Tools → ping → Run Tool**.
 
-### Підключення до Claude Desktop
+### Connecting to Claude Desktop
 
-Відкрий **Settings → Developer → Edit Config** і додай сервер у `claude_desktop_config.json`
-(шлях заміни на свій, на Windows через `\\`):
+Open **Settings → Developer → Edit Config** and add the server to `claude_desktop_config.json`
+(replace the paths with your own; on Windows use `\\`):
 
 ```json
 {
   "mcpServers": {
     "notes": {
       "command": "uv",
-      "args": ["run", "--directory", "/ПОВНИЙ/ШЛЯХ/до/own_mcp_study", "server.py"],
-      "env": { "NOTES_DIR": "/ПОВНИЙ/ШЛЯХ/до/експорту" }
+      "args": ["run", "--directory", "/FULL/PATH/to/own_mcp_study", "server.py"],
+      "env": { "NOTES_DIR": "/FULL/PATH/to/export" }
     }
   }
 }
 ```
 
-`env` можна прибрати, якщо експорт лежить у `notes/`.
+`env` can be removed if the export is in `notes/`.
 
-Перезапусти Claude Desktop і спитай, наприклад: «що в моєму конспекті про Tensor Cores?»
-Якщо `uv` не знаходиться, вкажи в `command` повний шлях до нього (`which uv`).
+Restart Claude Desktop and ask, for example: "what do my notes say about Tensor Cores?"
+If `uv` is not found, put its full path in `command` (`which uv`).

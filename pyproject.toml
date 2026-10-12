@@ -1,7 +1,7 @@
 [project]
 name = "notes-mcp"
 version = "0.1.0"
-description = "Власний MCP-сервер для конспекту з Notion"
+description = "Custom MCP server for personal Notion notes"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

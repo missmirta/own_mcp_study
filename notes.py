@@ -1,8 +1,8 @@
-"""Читання конспекту з Markdown-експорту Notion.
+"""Reading notes from a Notion Markdown export.
 
-Notion додає до кожного імені файлу й папки 32-символьний id
-(«Machine Learning 3b2736c1ab2c8060b525fd7bc7052f74.md»). Ми його відкидаємо,
-тож id нотатки виглядає як шлях з людськими назвами: «Machine Learning/PyTorch».
+Notion appends a 32-character id to every file and folder name
+("Machine Learning 3b2736c1ab2c8060b525fd7bc7052f74.md"). We strip it,
+so a note id looks like a path with human-readable names: "Machine Learning/PyTorch".
 """
 
 import re
@@ -31,7 +31,7 @@ def _title(text: str, fallback: str) -> str:
 
 
 def load_notes(notes_dir: Path) -> dict[str, Note]:
-    """Знаходить усі .md у папці (разом з вкладеними) і повертає їх за id."""
+    """Finds all .md files in the folder (including nested ones) and returns them by id."""
     notes: dict[str, Note] = {}
     for path in notes_dir.rglob("*.md"):
         rel = path.relative_to(notes_dir).with_suffix("")
@@ -49,7 +49,7 @@ class Match:
 
 
 def search(notes: dict[str, Note], query: str, limit: int) -> list[Match]:
-    """Пошук без урахування регістру; повертає рядки, де трапився запит."""
+    """Case-insensitive search; returns the lines where the query occurs."""
     needle = query.casefold()
     matches: list[Match] = []
     for note in notes.values():

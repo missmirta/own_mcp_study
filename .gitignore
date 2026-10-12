@@ -219,5 +219,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Особистий конспект (експорт з Notion)
+# Personal notes (Notion export)
 notes/

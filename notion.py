@@ -1,8 +1,8 @@
-"""Читання конспекту напряму з Notion API.
+"""Reading notes directly from the Notion API.
 
-Беремо кореневу сторінку, обходимо її блоки і перетворюємо їх на Markdown.
-Кожна підсторінка (child_page або link_to_page) стає окремою нотаткою з id
-«Батьківська/Підсторінка», як і в експорті.
+We take the root page, walk its blocks and convert them to Markdown.
+Each subpage (child_page or link_to_page) becomes a separate note with the id
+"Parent/Subpage", just like in the export.
 """
 
 import re
@@ -18,10 +18,10 @@ PAGE_ID = re.compile(r"([0-9a-f]{32})|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 
 
 def parse_page_id(value: str) -> str:
-    """Дістає id сторінки з посилання на Notion або з самого id."""
+    """Extracts the page id from a Notion link or from the id itself."""
     match = PAGE_ID.search(value.split("?")[0].lower())
     if not match:
-        raise ValueError(f"Не бачу id сторінки Notion у «{value}»")
+        raise ValueError(f"No Notion page id found in '{value}'")
     return match.group(0).replace("-", "")
 
 
@@ -45,10 +45,10 @@ def rich_text(parts: list[dict]) -> str:
 
 
 class NotionSource:
-    """Завантажує дерево сторінок і тримає його в кеші ttl секунд.
+    """Loads the page tree and keeps it cached for ttl seconds.
 
-    Інструменти викликаються часто (search читає все), а Notion API повільний
-    і має ліміт ~3 запити на секунду, тож без кешу кожне питання чекало б.
+    Tools are called often (search reads everything), and the Notion API is slow
+    with a limit of ~3 requests per second, so without a cache every question would wait.
     """
 
     def __init__(self, token: str, root: str, ttl: float = 60, client: httpx.Client | None = None):
@@ -71,8 +71,8 @@ class NotionSource:
         response = self.client.get(path, params=params)
         if response.status_code in (401, 403, 404):
             raise PermissionError(
-                f"Notion повернув {response.status_code} для {path}. Перевір NOTION_TOKEN і що сторінку "
-                "підключено до інтеграції (⋯ → Connections)."
+                f"Notion returned {response.status_code} for {path}. Check NOTION_TOKEN and that the page "
+                "is connected to the integration (⋯ → Connections)."
             )
         response.raise_for_status()
         return response.json()
@@ -91,8 +91,8 @@ class NotionSource:
         page = self._get(f"/pages/{page_id}")
         for prop in page.get("properties", {}).values():
             if prop.get("type") == "title":
-                return rich_text(prop["title"]) or "Без назви"
-        return "Без назви"
+                return rich_text(prop["title"]) or "Untitled"
+        return "Untitled"
 
     def _load_page(self, page_id: str, parent: str | None, notes: dict[str, Note], seen: set[str]) -> None:
         seen.add(page_id)
@@ -146,7 +146,7 @@ class NotionSource:
             elif kind in ("bookmark", "embed", "link_preview"):
                 line = data.get("url", "")
             else:
-                line = ""  # зображення, бази даних тощо поки пропускаємо
+                line = ""  # images, databases, etc. are skipped for now
 
             if line:
                 lines.append(indent + line)

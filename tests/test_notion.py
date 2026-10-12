@@ -26,11 +26,11 @@ PAGES = {
 
 CHILDREN = {
     ROOT: [
-        block("heading_2", rich_text=text("Процесори")),
-        block("paragraph", rich_text=text("CUDA", bold=True) + text(" від NVIDIA")),
+        block("heading_2", rich_text=text("Processors")),
+        block("paragraph", rich_text=text("CUDA", bold=True) + text(" from NVIDIA")),
         block("bulleted_list_item", has_children=True, id="list", rich_text=text("GPU")),
-        block("numbered_list_item", rich_text=text("перший")),
-        block("numbered_list_item", rich_text=text("другий")),
+        block("numbered_list_item", rich_text=text("first")),
+        block("numbered_list_item", rich_text=text("second")),
         block("table", has_children=True, id="table", table_width=2),
         block("child_page", id=SUB, title="PyTorch"),
         block("link_to_page", type="page_id", page_id=LINKED),
@@ -38,11 +38,11 @@ CHILDREN = {
     ],
     "list": [block("bulleted_list_item", rich_text=text("Tensor Cores"))],
     "table": [
-        block("table_row", cells=[text("Процесор"), text("Сила")]),
-        block("table_row", cells=[text("TPU"), text("матриці")]),
+        block("table_row", cells=[text("Processor"), text("Strength")]),
+        block("table_row", cells=[text("TPU"), text("matrices")]),
     ],
     SUB: [block("code", rich_text=text("x = torch.ones(2)"), language="python")],
-    LINKED: [block("paragraph", rich_text=text("Токенізація"))],
+    LINKED: [block("paragraph", rich_text=text("Tokenization"))],
 }
 
 
@@ -86,13 +86,13 @@ def test_page_tree_becomes_notes(source):
 def test_blocks_become_markdown(source):
     assert source.load()["Machine Learning"].text == (
         "# Machine Learning\n\n"
-        "### Процесори\n\n"
-        "**CUDA** від NVIDIA\n\n"
+        "### Processors\n\n"
+        "**CUDA** from NVIDIA\n\n"
         "- GPU\n\n"
         "  - Tensor Cores\n\n"
-        "1. перший\n\n"
-        "2. другий\n\n"
-        "| Процесор | Сила |\n| --- | --- |\n| TPU | матриці |\n\n"
+        "1. first\n\n"
+        "2. second\n\n"
+        "| Processor | Strength |\n| --- | --- |\n| TPU | matrices |\n\n"
         "📄 PyTorch\n"
     )
 
@@ -114,7 +114,7 @@ def test_missing_access_is_a_clear_error(calls):
 async def test_server_tools_use_notion(monkeypatch, source):
     monkeypatch.setattr(server, "NOTION", source)
     async with Client(server.mcp) as client:
-        hits = await client.call_tool("search_notes", {"query": "токен"})
+        hits = await client.call_tool("search_notes", {"query": "token"})
         resources = await client.list_resources()
-    assert hits.structured_content == {"result": [{"note_id": "Machine Learning/NLP", "line": 3, "text": "Токенізація"}]}
+    assert hits.structured_content == {"result": [{"note_id": "Machine Learning/NLP", "line": 3, "text": "Tokenization"}]}
     assert len(resources.resources) == 3

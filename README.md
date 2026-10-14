@@ -1,4 +1,4 @@
-# own_mcp_study
+# DocSearchByMcp
 
 A custom MCP server for personal Notion notes. Built step by step to learn the Model Context Protocol.
 

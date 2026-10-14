@@ -9,7 +9,7 @@ The notes it serves: [Machine Learning on Notion](https://app.notion.com/p/Machi
 1. **Server skeleton** with a single `ping` tool, checked in MCP Inspector and Claude Desktop. ✅
 2. **Notes as data**: a Markdown export from Notion and the tools `list_notes`, `read_note`, `search_notes`. ✅
 3. **The rest of the protocol**: a resource for every note and a "make a quiz on a topic" prompt. ✅
-4. **Live Notion**: reading through the Notion API instead of an export. ← currently here
+4. **Live Notion**: reading through the Notion API instead of an export. ✅
 
 ## Running
 
